@@ -107,7 +107,9 @@ module.exports = async function slackSend(core) {
       }
 
       try {
+        console.log("reached axios");
         await axios.post(webhookUrl, payload);
+        console.log("completed axios");
       } catch (err) {
         console.log('axios post failed, double check the payload being sent includes the keys Slack expects');
         console.log(payload);
@@ -122,6 +124,8 @@ module.exports = async function slackSend(core) {
       }
     }
 
+    console.log(webResponse);
+    
     if (webResponse && webResponse.ok) {
       core.setOutput('ts', webResponse.ts);
       // return the thread_ts if it exists, if not return the ts
