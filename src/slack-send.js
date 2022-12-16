@@ -41,8 +41,8 @@ module.exports = async function slackSend(core) {
         // parse github context variables
         const context = { github: github.context };
         console.log(context);
-        console.log(context?.payload);
-        console.log(context?.payload?.repository);
+        console.log(context.github?.payload);
+        console.log(context.github?.payload?.repository);
         const payloadString = payload.replace('$', '');
         payload = markup.up(payloadString, context);
       } catch (error) {
