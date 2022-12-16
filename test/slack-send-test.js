@@ -210,7 +210,7 @@ describe('slack-send', () => {
           const consoleSpy = sinon.spy(console, 'log');
           await slackSend(fakeCore);
 
-          assert(consoleSpy.calledWith('failed to configure https proxy agent for http proxy. Using default axios configuration'));
+          assert(consoleSpy.calledWith('failed to configure https proxy agent for http proxy. Using default configuration'));
           assert(AxiosMock.post.calledWithExactly('https://someurl', payload, {}));
         });
       });
