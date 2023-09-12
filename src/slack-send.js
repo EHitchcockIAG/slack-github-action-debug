@@ -39,7 +39,10 @@ module.exports = async function slackSend(core) {
       try {
         payload = await fs.readFile(path.resolve(payloadFilePath), 'utf-8');
         // parse github context variables
+        console.log(github);
         const context = { github: github.context };
+        console.log(context);
+        console.log(context.github?.payload);
         const payloadString = payload.replace('$', '');
         payload = markup.up(payloadString, context);
       } catch (error) {
@@ -60,10 +63,20 @@ module.exports = async function slackSend(core) {
       }
     }
 
+    let httpsProxyAgent = undefined;
+    try {
+      const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy || '';
+      if (httpsProxy && parseURL(httpsProxy).scheme === 'http') {
+        httpsProxyAgent = new HttpsProxyAgent(httpsProxy);
+      }
+    } catch (err) {
+      console.log('failed to configure https proxy agent for http proxy. Using default configuration');
+    }
+
     if (typeof botToken !== 'undefined' && botToken.length > 0) {
       const message = core.getInput('slack-message') || '';
       const channelIds = core.getInput('channel-id') || '';
-      const web = new WebClient(botToken);
+      const web = new WebClient(botToken, { agent: httpsProxyAgent });
 
       if (channelIds.length <= 0) {
         console.log('Channel ID is required to run this action. An empty one has been provided');
@@ -110,15 +123,11 @@ module.exports = async function slackSend(core) {
 
       const axiosOpts = {};
       try {
-        if (parseURL(webhookUrl).scheme === 'https') {
-          const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy || '';
-          if (httpsProxy && parseURL(httpsProxy).scheme === 'http') {
-            const httpsProxyAgent = new HttpsProxyAgent(httpsProxy);
-            axiosOpts.httpsAgent = httpsProxyAgent;
+        if (parseURL(webhookUrl).scheme === 'https' && httpsProxyAgent) {
+          axiosOpts.httpsAgent = httpsProxyAgent;
 
-            // Use configured tunnel above instead of default axios proxy setup from env vars
-            axiosOpts.proxy = false;
-          }
+          // Use configured tunnel above instead of default axios proxy setup from env vars
+          axiosOpts.proxy = false;
         }
       } catch (err) {
         console.log('failed to configure https proxy agent for http proxy. Using default axios configuration');
